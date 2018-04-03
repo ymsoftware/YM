@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\YM.Json\YM.Json\YM.Json.csproj" />
+    <ProjectReference Include="..\YM.Elasticsearch.Query\YM.Elasticsearch.Query.csproj" />
+    <ProjectReference Include="..\YM.Elasticsearch\YM.Elasticsearch.csproj" />
+  </ItemGroup>
+
+</Project>

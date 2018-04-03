@@ -1,0 +1,23 @@
+﻿{
+  "id": 1,
+  "name": "YM",
+  "success": true,
+  "escapes": "\\ttest",
+  "grades": [
+    {
+      "subject": "Math",
+      "grade": 5.0
+    },
+    {
+      "subject": "English",
+      "grade": 3.74
+    },
+    5,
+    3.14E+12,
+    "xyz"
+  ],
+  "params": {
+    "query": "test",
+    "size": 100
+  }
+}

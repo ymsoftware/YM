@@ -1,0 +1,218 @@
+﻿{
+  "tests": [
+    {
+      "template": {
+        "name": "${name}"
+      },
+      "params": {
+        "name": "YM"
+      },
+      "output": {
+        "name": "YM"
+      }
+    },
+    {
+      "template": {
+        "name": "${name}"
+      },
+      "params": {
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      },
+      "output": {
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "${type}_name": "${name}"
+      },
+      "params": {
+        "type": "politician",
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      },
+      "output": {
+        "politician_name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "${type}_name": "${name}",
+        "${type}_location": "${location}"
+      },
+      "params": {
+        "type": "politician",
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        },
+        "location": "New York"
+      },
+      "output": {
+        "politician_name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        },
+        "politician_location": "New York"
+      }
+    },
+    {
+      "template": {
+        "${type}_name": "${name}",
+        "${type}_location": "${location}"
+      },
+      "params": {
+        "type": "politician",
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      },
+      "output": {
+        "politician_name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "${type}_name": "${name}",
+        "${location_type}_location": "${location}"
+      },
+      "params": {
+        "type": "politician",
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        },
+        "location": "New York"
+      },
+      "output": {
+        "politician_name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "name": {
+          "first": "${first_name}",
+          "last": "${last_name}"
+        }
+      },
+      "params": {
+        "first_name": "Yuri",
+        "last_name": "Metelkin"
+      },
+      "output": {
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "name": {
+          "first": "${first_name}",
+          "last": "${last_name}"
+        }
+      },
+      "params": {
+        "last_name": "Metelkin"
+      },
+      "output": {
+        "name": {
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "name": {
+          "first": "${first_name}",
+          "last": "${last_name}"
+        }
+      },
+      "params": {
+        "name": "Yuri Metelkin"
+      },
+      "output": {
+      }
+    },
+    {
+      "template": {
+        "name": "${first_name} ${last_name}"
+      },
+      "params": {
+        "first_name": "Yuri",
+        "last_name": "Metelkin"
+      },
+      "output": {
+        "name": "Yuri Metelkin"
+      }
+    },
+    {
+      "template": {
+        "name": "${first_name} ${last_name}",
+        "numbers": "${numbers}",
+        "employment": [
+          {
+            "name": "${first_name} ${last_name}",
+            "period": "${period1}"
+          },
+          {
+            "name": "${first_name} ${last_name}",
+            "period": "${period2}"
+          }
+        ]
+      },
+      "params": {
+        "first_name": "Yuri",
+        "last_name": "Metelkin",
+        "numbers": [ 1, 2, 3 ],
+        "period1": {
+          "from": "2000-01-01",
+          "to": "2001-12-31"
+        },
+        "period2": {
+          "from": "2002-01-01",
+          "to": "2004-12-31"
+        }
+      },
+      "output": {
+        "name": "Yuri Metelkin",
+        "numbers": [ 1, 2, 3 ],
+        "employment": [
+          {
+            "name": "Yuri Metelkin",
+            "period": {
+              "from": "2000-01-01",
+              "to": "2001-12-31"
+            }
+          },
+          {
+            "name": "Yuri Metelkin",
+            "period": {
+              "from": "2002-01-01",
+              "to": "2004-12-31"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

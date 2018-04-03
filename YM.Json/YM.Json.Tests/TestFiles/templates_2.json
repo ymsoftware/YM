@@ -1,0 +1,78 @@
+﻿{
+  "tests": [
+    {
+      "template": {
+        "name": "${name?YM}"
+      },
+      "params": {},
+      "output": {
+        "name": "YM"
+      }
+    },
+    {
+      "template": {
+        "${type?politician}_name": "${name}"
+      },
+      "params": {
+        "type": "politician",
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      },
+      "output": {
+        "politician_name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "${type?politician}_name": "${name}"
+      },
+      "params": {
+        "type": "athlete",
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      },
+      "output": {
+        "athlete_name": {
+          "first": "Yuri",
+          "last": "Metelkin"
+        }
+      }
+    },
+    {
+      "template": {
+        "name": {
+          "first": "${first_name?Yuri}",
+          "last": "${last_name?Metelkin}"
+        }
+      },
+      "params": {
+        "first_name": "Yuri",
+        "last_name": "Metelkine"
+      },
+      "output": {
+        "name": {
+          "first": "Yuri",
+          "last": "Metelkine"
+        }
+      }
+    },
+    {
+      "template": {
+        "name": "${first_name?Yuri} ${last_name?Metelkin}"
+      },
+      "params": {
+        "last_name": "Metelkin"
+      },
+      "output": {
+        "name": "Yuri Metelkin"
+      }
+    }
+  ]
+}

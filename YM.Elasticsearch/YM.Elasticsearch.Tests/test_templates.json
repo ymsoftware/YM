@@ -1,0 +1,234 @@
+﻿[
+  {
+    "template": {
+      "term": {
+        "type": "${type}"
+      }
+    },
+    "params": {
+      "type": "text"
+    },
+    "output": {
+      "term": {
+        "type": "text"
+      }
+    }
+  },
+  {
+    "template": {
+      "term": {
+        "${field}": "${value}"
+      }
+    },
+    "params": {
+      "field": "type",
+      "value": "text"
+    },
+    "output": {
+      "term": {
+        "type": "text"
+      }
+    }
+  },
+  {
+    "template": {
+      "term": {
+        "type": "${type}"
+      }
+    },
+    "params": {},
+    "output": {}
+  },
+  {
+    "template": {
+      "terms": {
+        "type": "${types}"
+      }
+    },
+    "params": {
+      "types": [ "text", "photo" ]
+    },
+    "output": {
+      "terms": {
+        "type": [ "text", "photo" ]
+      }
+    }
+  },
+  {
+    "template": {
+      "terms": {
+        "type": [ "text", "${type}" ]
+      }
+    },
+    "params": {
+      "type": "photo"
+    },
+    "output": {
+      "terms": {
+        "type": [ "text", "photo" ]
+      }
+    }
+  },
+  {
+    "template": {
+      "bool": {
+        "must": {
+          "match": {
+            "headline": {
+              "query": "${query}",
+              "operator": "and"
+            }
+          }
+        },
+        "must_not": {
+          "term": {
+            "priority": "${priority}"
+          }
+        },
+        "should": [
+          {
+            "match_phrase": {
+              "headline": "${query}"
+            }
+          },
+          {
+            "match_phrase": {
+              "title": "${ap}"
+            }
+          }
+        ],
+        "filter": [
+          {
+            "term": {
+              "type": "${type}"
+            }
+          },
+          {
+            "terms": {
+              "products": "${products}"
+            }
+          }
+        ]
+      }
+    },
+    "params": {
+      "query": "Yuri Metelkin",
+      "ap": "AP News",
+      "priority": 1,
+      "type": "text",
+      "products": [
+        1,
+        2,
+        3
+      ]
+    },
+    "output": {
+      "bool": {
+        "must": {
+          "match": {
+            "headline": {
+              "query": "Yuri Metelkin",
+              "operator": "and"
+            }
+          }
+        },
+        "must_not": {
+          "term": {
+            "priority": 1
+          }
+        },
+        "should": [
+          {
+            "match_phrase": {
+              "headline": "Yuri Metelkin"
+            }
+          },
+          {
+            "match_phrase": {
+              "title": "AP News"
+            }
+          }
+        ],
+        "filter": [
+          {
+            "term": {
+              "type": "text"
+            }
+          },
+          {
+            "terms": {
+              "products": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "template": {
+      "bool": {
+        "must": {
+          "match": {
+            "headline": {
+              "query": "${query}",
+              "operator": "and"
+            }
+          }
+        },
+        "must_not": {
+          "term": {
+            "priority": "${priority}"
+          }
+        },
+        "should": [
+          {
+            "match_phrase": {
+              "headline": "${query}"
+            }
+          },
+          {
+            "match_phrase": {
+              "title": "${ap}"
+            }
+          }
+        ],
+        "filter": [
+          {
+            "term": {
+              "type": "${type}"
+            }
+          },
+          {
+            "terms": {
+              "products": "${products}"
+            }
+          }
+        ]
+      }
+    },
+    "params": {
+      "query": "Yuri Metelkin"
+    },
+    "output": {
+      "bool": {
+        "must": {
+          "match": {
+            "headline": {
+              "query": "Yuri Metelkin",
+              "operator": "and"
+            }
+          }
+        },
+        "should": {
+          "match_phrase": {
+            "headline": "Yuri Metelkin"
+          }
+        }
+      }
+    }
+  }
+]

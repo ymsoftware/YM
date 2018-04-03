@@ -1,0 +1,24 @@
+﻿{
+  "query": {
+    "bool": {
+      "must": {
+        "match": {
+          "headline": "test"
+        }
+      },
+      "filter": [
+        {
+          "term": {
+            "type": "text"
+          }
+        },
+        {
+          "terms": {
+            "filings.products": [ 1, 2, 3 ]
+          }
+        }
+      ]
+    }
+  },
+  "size": 100
+}
