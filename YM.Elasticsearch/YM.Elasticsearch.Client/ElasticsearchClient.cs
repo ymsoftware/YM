@@ -24,14 +24,14 @@ namespace YM.Elasticsearch.Client
             _es = "http://localhost:9200";
         }
 
-        public ElasticsearchClient(Uri uri)
+        public ElasticsearchClient(Uri clusterUri)
         {
-            _es = string.Format("{0}://{1}:{2}", uri.Scheme, uri.Host, uri.Port);
+            _es = string.Format("{0}://{1}:{2}", clusterUri.Scheme, clusterUri.Host, clusterUri.Port);
         }
 
-        public ElasticsearchClient(string url)
+        public ElasticsearchClient(string clusterUrl)
         {
-            var uri = new Uri(url);
+            var uri = new Uri(clusterUrl);
             _es = string.Format("{0}://{1}:{2}", uri.Scheme, uri.Host, uri.Port);
         }
 
@@ -52,6 +52,13 @@ namespace YM.Elasticsearch.Client
             string url = string.Format("{0}/{1}", _es, index);
             var response = await SendAsync(url, HttpMethod.Delete, null);
             return new DeleteIndexResponse(response);
+        }
+
+        public async Task<bool> IndexExistsAsync(string index)
+        {
+            string url = string.Format("{0}/{1}", _es, index);
+            var response = await SendAsync(url, HttpMethod.Head, null);
+            return response.Http.IsSuccessStatusCode;
         }
 
         public async Task<IndexDocumentResponse> IndexDocumentAsync(IndexDocumentRequest request)
@@ -109,6 +116,20 @@ namespace YM.Elasticsearch.Client
         public async Task<SearchResponse> SearchAsync(SearchRequest request)
         {
             string json = await SearchAsStringAsync(request);
+            var jo = JsonObject.Parse(json);
+            return new SearchResponse(jo);
+        }
+
+        public async Task<string> SearchUriAsStringAsync(string searchUri)
+        {
+            string url = string.Format("{0}{1}{2}", _es, searchUri.StartsWith("/") ? "" : "/", searchUri);
+            var response = await SendAsync(url, HttpMethod.Get, null);
+            return response.Content;
+        }
+
+        public async Task<SearchResponse> SearchUriAsync(string searchUri)
+        {
+            string json = await SearchUriAsStringAsync(searchUri);
             var jo = JsonObject.Parse(json);
             return new SearchResponse(jo);
         }

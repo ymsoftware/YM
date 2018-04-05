@@ -1,0 +1,318 @@
+﻿[
+  {
+    "template": {
+      "id": "1",
+      "name": "1",
+      "index": "test",
+      "source": {
+        "query": {
+          "term": {
+            "type": "${type}"
+          }
+        }
+      }
+    },
+    "params": {
+      "type": "text"
+    },
+    "output": {
+      "query": {
+        "term": {
+          "type": "text"
+        }
+      }
+    }
+  },
+  {
+    "template": {
+      "id": "2",
+      "name": "2",
+      "index": "test",
+      "source": {
+        "query": {
+          "term": {
+            "${field}": "${value}"
+          }
+        },
+        "_source": [ "head", "body" ]
+      }
+    },
+    "params": {
+      "field": "type",
+      "value": "text"
+    },
+    "output": {
+      "query": {
+        "term": {
+          "type": "text"
+        }
+      },
+      "_source": [ "head", "body" ]
+    }
+  },
+  {
+    "template": {
+      "id": "3",
+      "name": "3",
+      "index": "test",
+      "source": {
+        "query": {
+          "term": {
+            "type": "${type}"
+          }
+        },
+        "sort": [ { "date": "desc" } ],
+        "_source": [ "head", "body" ]
+      }
+    },
+    "params": {},
+    "output": {
+      "sort": [ { "date": "desc" } ],
+      "_source": [ "head", "body" ]
+    }
+  },
+  {
+    "template": {
+      "id": "4",
+      "name": "4",
+      "index": "test",
+      "source": {
+        "query": {
+          "terms": {
+            "type": "${types}"
+          }
+        },
+        "sort": [ { "date": "desc" } ],
+        "_source": [ "head", "body" ]
+      }
+    },
+    "params": {
+      "types": [ "text", "photo" ]
+    },
+    "output": {
+      "query": {
+        "terms": {
+          "type": [ "text", "photo" ]
+        }
+      },
+      "sort": [ { "date": "desc" } ],
+      "_source": [ "head", "body" ]
+    }
+  },
+  {
+    "template": {
+      "id": "5",
+      "name": "5",
+      "index": "test",
+      "source": {
+        "query": {
+          "terms": {
+            "type": [ "text", "${type}" ]
+          }
+        }
+      }
+    },
+    "params": {
+      "type": "photo"
+    },
+    "output": {
+      "query": {
+        "terms": {
+          "type": [ "text", "photo" ]
+        }
+      }
+    }
+  },
+  {
+    "template": {
+      "id": "6",
+      "name": "6",
+      "index": "test",
+      "source": {
+        "query": {
+          "bool": {
+            "must": {
+              "match": {
+                "headline": {
+                  "query": "${query}",
+                  "operator": "and"
+                }
+              }
+            },
+            "must_not": {
+              "term": {
+                "priority": "${priority}"
+              }
+            },
+            "should": [
+              {
+                "match_phrase": {
+                  "headline": "${query}"
+                }
+              },
+              {
+                "match_phrase": {
+                  "title": "${ap}"
+                }
+              }
+            ],
+            "filter": [
+              {
+                "term": {
+                  "type": "${type}"
+                }
+              },
+              {
+                "terms": {
+                  "products": "${products}"
+                }
+              }
+            ]
+          }
+        },
+        "sort": [ { "date": "desc" } ],
+        "_source": [ "head", "body" ]
+      }
+    },
+    "params": {
+      "query": "Yuri Metelkin",
+      "ap": "AP News",
+      "priority": 1,
+      "type": "text",
+      "products": [
+        1,
+        2,
+        3
+      ]
+    },
+    "output": {
+      "query": {
+        "bool": {
+          "must": {
+            "match": {
+              "headline": {
+                "query": "Yuri Metelkin",
+                "operator": "and"
+              }
+            }
+          },
+          "must_not": {
+            "term": {
+              "priority": 1
+            }
+          },
+          "should": [
+            {
+              "match_phrase": {
+                "headline": "Yuri Metelkin"
+              }
+            },
+            {
+              "match_phrase": {
+                "title": "AP News"
+              }
+            }
+          ],
+          "filter": [
+            {
+              "term": {
+                "type": "text"
+              }
+            },
+            {
+              "terms": {
+                "products": [
+                  1,
+                  2,
+                  3
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "sort": [ { "date": "desc" } ],
+      "_source": [ "head", "body" ]
+    }
+  },
+  {
+    "template": {
+      "id": "7",
+      "name": "7",
+      "index": "test",
+      "source": {
+        "query": {
+          "bool": {
+            "must": {
+              "match": {
+                "headline": {
+                  "query": "${query}",
+                  "operator": "and"
+                }
+              }
+            },
+            "must_not": {
+              "term": {
+                "priority": "${priority}"
+              }
+            },
+            "should": [
+              {
+                "match_phrase": {
+                  "headline": "${query}"
+                }
+              },
+              {
+                "match_phrase": {
+                  "title": "${ap}"
+                }
+              }
+            ],
+            "filter": [
+              {
+                "term": {
+                  "type": "${type}"
+                }
+              },
+              {
+                "terms": {
+                  "products": "${products}"
+                }
+              }
+            ]
+          }
+        },
+        "from": 20,
+        "size": 20,
+        "_source": [ "head", "body" ],
+        "sort": [ { "date": "desc" } ]
+      }
+    },
+    "params": {
+      "query": "Yuri Metelkin"
+    },
+    "output": {
+      "query": {
+        "bool": {
+          "must": {
+            "match": {
+              "headline": {
+                "query": "Yuri Metelkin",
+                "operator": "and"
+              }
+            }
+          },
+          "should": {
+            "match_phrase": {
+              "headline": "Yuri Metelkin"
+            }
+          }
+        }
+      },
+      "from": 20,
+      "size": 20,
+      "sort": [ { "date": "desc" } ],
+      "_source": [ "head", "body" ]
+    }
+  }
+]

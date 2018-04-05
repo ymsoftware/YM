@@ -9,6 +9,8 @@ namespace YM.Elasticsearch.Client.Search
     {
         private const int DEFAULT_SIZE = 10;
 
+        private readonly JsonObject _jo;
+
         public string Index { get; private set; }
         public string Type { get; private set; }
         public IQuery Query { get; private set; }
@@ -18,7 +20,7 @@ namespace YM.Elasticsearch.Client.Search
         public SearchSort[] Sort { get; private set; }
         public object[] SearchAfter { get; private set; }
 
-        public SearchRequest(string index, string type = null, JsonObject jo = null)
+        public SearchRequest(string index, string type = null, JsonObject jo = null, bool parseJson = true)
         {
             Index = index;
             Type = type;
@@ -26,17 +28,24 @@ namespace YM.Elasticsearch.Client.Search
 
             if (jo != null && !jo.IsEmpty)
             {
-                foreach (var jp in jo.Properties())
+                if (parseJson)
                 {
-                    switch (jp.Name)
+                    foreach (var jp in jo.Properties())
                     {
-                        case "query": Query = jp.Value.Get<JsonObject>().ToQuery(); break;
-                        case "size": Size = jp.Value.Get<int>(); break;
-                        case "from": From = jp.Value.Get<int>(); break;
-                        case "sort": Sort = GetSort(jp); break;
-                        case "_source": Source = new SearchSource(jp.Value); break;
-                        case "search_after": SearchAfter = jp.Value.Get<JsonArray>().Select(e => e.Get()).ToArray(); break;
+                        switch (jp.Name)
+                        {
+                            case "query": Query = jp.Value.Get<JsonObject>().ToQuery(); break;
+                            case "size": Size = jp.Value.Get<int>(); break;
+                            case "from": From = jp.Value.Get<int>(); break;
+                            case "sort": Sort = GetSort(jp); break;
+                            case "_source": Source = new SearchSource(jp.Value); break;
+                            case "search_after": SearchAfter = jp.Value.Get<JsonArray>().Select(e => e.Get()).ToArray(); break;
+                        }
                     }
+                }
+                else
+                {
+                    _jo = jo;
                 }
             }
         }
@@ -116,6 +125,11 @@ namespace YM.Elasticsearch.Client.Search
 
         public override JsonObject ToJson()
         {
+            if (_jo != null)
+            {
+                return _jo;
+            }
+
             var jo = new JsonObject();
 
             if (Query != null)
