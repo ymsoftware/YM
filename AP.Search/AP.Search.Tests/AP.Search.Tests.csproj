@@ -57,6 +57,7 @@
     <Compile Include="SearchTemplateCache.cs" />
     <Compile Include="SearchTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Temp.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

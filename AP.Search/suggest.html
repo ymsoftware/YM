@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Elasticsearch suggest</title>    
+</head>
+<body>
+    <h1>Elasticsearch Suggest</h1>
+    <input type="text" onkeyup="suggest()" id="prefix" />
+    <div id="results"></div>
+    <script>
+        const results = document.getElementById('results');
+        const prefix = document.getElementById('prefix');
+
+        function suggest() {
+            const body = {
+                suggest: {
+                    suggest: {
+                        prefix: prefix.value,
+                        completion: {
+                            field: 'suggest',
+                            size: 10
+                        }                        
+                    }
+                }
+            };
+            postData('http://localhost:9200/suggest/_search', body)
+                .then(data => {
+                    results.innerHTML = '';
+
+                    data.suggest.suggest[0].options.forEach(function (option) {
+                        let suggest = document.createElement('div');
+                        let text = document.createTextNode(option._source.text);
+                        suggest.appendChild(text);
+                        results.appendChild(suggest);
+                    });
+                })
+                .catch(error => console.error(error));
+        }
+
+        function postData(url, data) {
+            // Default options are marked with *
+            return fetch(url, {
+                body: JSON.stringify(data), // must match 'Content-Type' header
+                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: 'same-origin', // include, same-origin, *omit
+                headers: {
+                    'user-agent': 'Mozilla/4.0 MDN Example',
+                    'content-type': 'application/json'
+                },
+                method: 'POST', // *GET, POST, PUT, DELETE, etc.
+                mode: 'cors', // no-cors, cors, *same-origin
+                redirect: 'follow', // *manual, follow, error
+                referrer: 'no-referrer', // *client, no-referrer
+            })
+                .then(response => response.json()) // parses response to JSON
+        }
+    </script>
+</body>
+</html>

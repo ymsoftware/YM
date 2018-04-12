@@ -14,6 +14,9 @@ namespace AP.Search.Tests
         [TestMethod]
         public async Task test_templates()
         {
+            var temp = new Temp();
+            await temp.Test();
+
             var tests = JsonArray.Parse(File.ReadAllText("test_templates.json"))
                 .Select(e => e.Get<JsonObject>())
                 .ToArray();
