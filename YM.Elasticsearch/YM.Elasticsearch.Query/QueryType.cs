@@ -20,6 +20,10 @@
         FilterScoreFunction,
         DecayScoreFunction,
         FunctionScoreQuery,
-        PercolateQuery
+        PercolateQuery,
+        NestedQuery,
+        SpanTermQuery,
+        SpanNearQuery,
+        SpanMultiTermQuery
     }
 }

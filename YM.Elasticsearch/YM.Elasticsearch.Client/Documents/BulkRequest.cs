@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using YM.Json;
 
 namespace YM.Elasticsearch.Client.Documents
@@ -9,10 +10,12 @@ namespace YM.Elasticsearch.Client.Documents
         private readonly List<BulkRequestItem> _items = new List<BulkRequestItem>();
 
         public bool IsRefresh { get; private set; }
+        public string Pipeline { get; private set; }
 
-        public BulkRequest(bool refresh = false)
+        public BulkRequest(bool refresh = false, string pipeline = null)
         {
             IsRefresh = refresh;
+            Pipeline = pipeline;
         }
 
         public BulkRequest Add(BulkRequestItem item)
@@ -35,12 +38,33 @@ namespace YM.Elasticsearch.Client.Documents
 
         public override string GetBody()
         {
-            return string.Join("\n", _items.Select(e => e.ToBulkString())) + "\n";
+            var sb = new StringBuilder();
+
+            if (_items.Count > 0)
+            {
+                sb.Append(string.Join("\n", _items.Select(e => e.ToBulkString())));
+                sb.Append("\n");
+            }            
+
+            return sb.ToString();
         }
 
         public override string GetUrl(string clusterUrl)
         {
-            string query = IsRefresh ? "?refresh=true" : "";
+            var tokens = new List<string>();
+
+            if (IsRefresh)
+            {
+                tokens.Add("refresh=true");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Pipeline))
+            {
+                tokens.Add("pipeline=" + Pipeline);
+            }
+
+            string query = tokens.Count == 0 ? "" : "?" + string.Join("&", tokens);
+
             return string.Format("{0}/_bulk{1}", clusterUrl, query);
         }        
 

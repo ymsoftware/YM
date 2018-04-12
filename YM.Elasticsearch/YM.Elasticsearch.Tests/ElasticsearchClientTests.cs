@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using YM.Elasticsearch.Client;
 using YM.Elasticsearch.Client.Documents;
+using YM.Elasticsearch.Client.Indices;
 using YM.Elasticsearch.Client.Search;
 using YM.Elasticsearch.Query.CompoundQueries;
 using YM.Elasticsearch.Query.FullTextQueries;
@@ -81,6 +82,57 @@ namespace YM.Elasticsearch.Tests
             Assert.IsTrue(gdr.Document.Index == "test");
             Assert.IsTrue(gdr.Document.Version == 0);
             Assert.IsNull(gdr.Document.Source);
+        }
+
+        [TestMethod]
+        public async Task alias()
+        {
+            var es = new ElasticsearchClient();
+
+            await es.DeleteIndexAsync("test");
+
+            var cir = await es.CreateIndexAsync("test");
+            Assert.IsTrue(cir.IsSuccess);
+            Assert.IsTrue(cir.Index == "test");
+
+            var source = new JsonObject()
+                .Add("name", "YM");
+
+            var document = new ElasticsearchDocument("1", source, "test");
+            var idr = await es.IndexDocumentAsync(new IndexDocumentRequest(document, true));
+
+            var search = new SearchRequest("test")
+                .SetQuery(new MatchQuery("name", "YM"));
+
+            var hits = await es.SearchAsync(search);
+            Assert.IsTrue(hits.Hits.Total == 1);
+            var hit = hits.Hits.Hits[0];
+            Assert.IsTrue(hit.Id == "1");
+
+            var response = await es.AliasAsync(new AliasRequest().Add("test", "test-alias"));
+            Assert.IsTrue(response.IsSuccess);
+
+            var aliases = await es.GetIndexAliasesAsync("test");
+            Assert.IsTrue(aliases.Aliases[0] == "test-alias");
+            var indices = await es.GetAliasIndicesAsync("test-alias");
+            Assert.IsTrue(indices.Indices[0] == "test");
+
+            search = new SearchRequest("test-alias")
+                .SetQuery(new MatchQuery("name", "YM"));
+
+            hits = await es.SearchAsync(search);
+            Assert.IsTrue(hits.Hits.Total == 1);
+            hit = hits.Hits.Hits[0];
+            Assert.IsTrue(hit.Id == "1");
+
+            response = await es.AliasAsync(new AliasRequest().Remove("test", "test-alias"));
+            Assert.IsTrue(response.IsSuccess);
+
+            search = new SearchRequest("test-alias")
+                .SetQuery(new MatchQuery("name", "YM"));
+
+            hits = await es.SearchAsync(search);
+            Assert.IsNull(hits.Hits);
         }
 
         [TestMethod]

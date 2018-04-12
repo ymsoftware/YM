@@ -1,19 +1,15 @@
-﻿using YM.Json;
-
-namespace YM.Elasticsearch.Client.Search
+﻿namespace YM.Elasticsearch.Client.Search
 {
     public class ScrollResponse : SearchResponse
     {
         public string ScrollId { get; private set; }
 
-        public ScrollResponse(JsonObject jo) : base(jo)
+        public ScrollResponse(RestResponse response) : base(response)
         {
-            ScrollId = jo.Property<string>("_scroll_id");
-        }
-
-        public override JsonObject ToJson()
-        {
-            return base.ToJson().Add("_scroll_id", ScrollId);
+            if (IsSuccess)
+            {
+                ScrollId = ToJson().Property<string>("_scroll_id");
+            }
         }
     }
 }

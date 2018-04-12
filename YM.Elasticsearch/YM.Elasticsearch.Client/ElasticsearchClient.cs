@@ -61,6 +61,34 @@ namespace YM.Elasticsearch.Client
             return response.Http.IsSuccessStatusCode;
         }
 
+        public async Task<AliasResponse> AliasAsync(AliasRequest request)
+        {
+            string url = request.GetUrl(_es);
+            var response = await SendAsync(url, HttpMethod.Post, request.GetBody());
+            return new AliasResponse(response);
+        }
+
+        public async Task<GetIndexAliasesResponse> GetIndexAliasesAsync(string index)
+        {
+            string url = string.Format("{0}/{1}/_alias", _es, index);
+            var response = await SendAsync(url, HttpMethod.Get, null);
+            return new GetIndexAliasesResponse(response);
+        }
+
+        public async Task<GetAliasIndicesResponse> GetAliasIndicesAsync(string alias)
+        {
+            string url = string.Format("{0}/_alias/{1}", _es, alias);
+            var response = await SendAsync(url, HttpMethod.Get, null);
+            return new GetAliasIndicesResponse(response);
+        }
+
+        public async Task<CatIndexResponse> CatIndexAsync(string index)
+        {
+            string url = string.Format("{0}/_cat/indices/{1}", _es, index);
+            var response = await SendAsync(url, HttpMethod.Get, null);
+            return new CatIndexResponse(response);
+        }
+
         public async Task<IndexDocumentResponse> IndexDocumentAsync(IndexDocumentRequest request)
         {
             string url = request.GetUrl(_es);
@@ -115,9 +143,9 @@ namespace YM.Elasticsearch.Client
 
         public async Task<SearchResponse> SearchAsync(SearchRequest request)
         {
-            string json = await SearchAsStringAsync(request);
-            var jo = JsonObject.Parse(json);
-            return new SearchResponse(jo);
+            string url = request.GetUrl(_es);
+            var response = await SendAsync(url, HttpMethod.Post, request.GetBody());
+            return new SearchResponse(response);
         }
 
         public async Task<string> SearchUriAsStringAsync(string searchUri)
@@ -129,25 +157,24 @@ namespace YM.Elasticsearch.Client
 
         public async Task<SearchResponse> SearchUriAsync(string searchUri)
         {
-            string json = await SearchUriAsStringAsync(searchUri);
-            var jo = JsonObject.Parse(json);
-            return new SearchResponse(jo);
+            string url = string.Format("{0}{1}{2}", _es, searchUri.StartsWith("/") ? "" : "/", searchUri);
+            var response = await SendAsync(url, HttpMethod.Get, null);
+            return new SearchResponse(response);
         }
 
         public async Task<ScrollResponse> ScrollAsync(ScrollRequest request)
         {
             string url = request.GetUrl(_es);
             var response = await SendAsync(url, HttpMethod.Post, request.GetBody());
-            var jo = JsonObject.Parse(response.Content);
-            return new ScrollResponse(jo);
+            return new ScrollResponse(response);
         }
 
         public async Task<SearchAfterResponse> SearchAfterAsync(SearchRequest request)
         {
             request.SetFrom(0);
-            string json = await SearchAsStringAsync(request);
-            var jo = JsonObject.Parse(json);
-            return new SearchAfterResponse(jo);
+            string url = request.GetUrl(_es);
+            var response = await SendAsync(url, HttpMethod.Post, request.GetBody());
+            return new SearchAfterResponse(response);
         }
 
         private async Task<RestResponse> SendAsync(string url, HttpMethod method, string body)

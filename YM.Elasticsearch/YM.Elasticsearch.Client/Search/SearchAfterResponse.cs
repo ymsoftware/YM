@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using YM.Json;
 
 namespace YM.Elasticsearch.Client.Search
 {
@@ -7,7 +6,7 @@ namespace YM.Elasticsearch.Client.Search
     {
         public object[] SearchAfter { get; private set; }
 
-        public SearchAfterResponse(JsonObject jo) : base(jo)
+        public SearchAfterResponse(RestResponse response) : base(response)
         {
             if (!IsEmpty)
             {

@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using YM.Elasticsearch.Query.CompoundQueries;
 using YM.Elasticsearch.Query.FullTextQueries;
+using YM.Elasticsearch.Query.JoiningQueries;
+using YM.Elasticsearch.Query.SpanQueries;
 using YM.Elasticsearch.Query.SpecializedQueries;
 using YM.Elasticsearch.Query.TermQueries;
 using YM.Json;
@@ -42,11 +45,277 @@ namespace YM.Elasticsearch.Query
                 case "constant_score": return ParseConstantScoreQuery(query);
                 case "function_score": return ParseFunctionScoreQuery(query);
                 case "percolate": return ParsePercolateQuery(query);
+                case "nested": return ParseNestedQuery(query);                
+                case "span_term": return ParseSpanTermQuery(query);
+                case "span_near": return ParseSpanNearQuery(query);
+                case "span_multi": return ParseSpanMultiTermQuery(query);
                 case "match_all": return new MatchAllQuery();
             }
 
             return null;
         }
+
+        public static T[] GetFilters<T>(this IQuery query, string field, T[] defaults)
+        {
+            IQuery q = null;
+
+            if (query is ConstantScoreQuery)
+            {
+                q = (query as ConstantScoreQuery).Query;
+            }
+            else if (query is FunctionScoreQuery)
+            {
+                q = (query as FunctionScoreQuery).Query;
+            }
+            else
+            {
+                q = query;
+            }
+
+            if (q is TermQuery)
+            {
+                var tq = q as TermQuery;
+                if (tq.Field == field)
+                {
+                    return new T[] { (T)tq.Value };
+                }
+            }
+            else if (q is TermsQuery)
+            {
+                var tq = q as TermsQuery;
+                if (tq.Field == field)
+                {
+                    return tq.Values.Select(e => (T)e).ToArray();
+                }
+            }
+            else if (q is BoolQuery)
+            {
+                var bq = q as BoolQuery;
+
+                var qs = new List<IQuery>();
+                if (bq.MustQueries != null && bq.MustQueries.Length > 0)
+                {
+                    qs.AddRange(bq.MustQueries);
+                }
+                if (bq.FilterQueries != null && bq.FilterQueries.Length > 0)
+                {
+                    qs.AddRange(bq.FilterQueries);
+                }
+
+                if (qs.Count > 0)
+                {
+                    var values = new List<T>();
+                    foreach (var cq in qs)
+                    {
+                        values.AddRange(cq.GetFilters<T>(field, new T[] { }));
+                    }
+
+                    if (values.Count > 0)
+                    {
+                        return values.Distinct().ToArray();
+                    }
+                }
+            }
+
+            return defaults;
+        }
+
+        public static T[] GetNotFilters<T>(this IQuery query, string field, T[] defaults)
+        {
+            IQuery q = null;
+
+            if (query is ConstantScoreQuery)
+            {
+                q = (query as ConstantScoreQuery).Query;
+            }
+            else if (query is FunctionScoreQuery)
+            {
+                q = (query as FunctionScoreQuery).Query;
+            }
+            else
+            {
+                q = query;
+            }
+
+            if (q is BoolQuery)
+            {
+                var bq = q as BoolQuery;
+
+                if (bq.NotQueries != null && bq.NotQueries.Length > 0)
+                {
+                    var values = new List<T>();
+                    foreach (var nq in bq.NotQueries)
+                    {
+                        if (nq is TermQuery || nq is TermsQuery)
+                        {
+                            values.AddRange(nq.GetFilters<T>(field, new T[] { }));
+                        }
+                        else if (nq is BoolQuery)
+                        {
+                            values.AddRange(nq.GetNotFilters<T>(field, new T[] { }));
+                        }
+                    }
+
+                    if (values.Count > 0)
+                    {
+                        return values.Distinct().ToArray();
+                    }
+                }
+            }
+
+            return defaults;
+        }
+
+        public static IQuery RemoveFilters(this IQuery query, string field, object[] values = null)
+        {
+            if (query is ConstantScoreQuery)
+            {
+                return new ConstantScoreQuery((query as ConstantScoreQuery).Query.RemoveFilters(field, values));
+            }
+
+            if (query is FunctionScoreQuery)
+            {
+                var fq = query as FunctionScoreQuery;
+                return new FunctionScoreQuery(fq.Query.RemoveFilters(field, values), fq.Functions);
+            }
+
+
+            if (query is TermQuery)
+            {
+                var tq = query as TermQuery;
+                if (tq.Field == field && (values == null || values.Contains(tq.Value)))
+                {
+                    return new MatchAllQuery();
+                }
+            }
+
+            if (query is TermsQuery)
+            {
+                var tq = query as TermsQuery;
+                if (tq.Field == field)
+                {
+                    if (values == null)
+                    {
+                        return new MatchAllQuery();
+                    }
+                    else
+                    {
+                        var except = tq.Values.Except(values).ToArray();
+                        if (except.Length == 0)
+                        {
+                            return new MatchAllQuery();
+                        }
+                        return new TermsQuery(tq.Field, except);
+                    }
+                }
+            }
+
+            if (query is BoolQuery)
+            {
+                var bq = query as BoolQuery;
+
+                var must = bq.MustQueries;
+                if (must != null && must.Length > 0)
+                {
+                    must = must.Select(e => e.RemoveFilters(field, values)).Where(e => !(e is MatchAllQuery)).ToArray();
+                    if (must.Length == 0) must = null;
+                }
+
+                var filter = bq.FilterQueries;
+                if (filter != null && filter.Length > 0)
+                {
+                    filter = filter.Select(e => e.RemoveFilters(field, values)).Where(e => !(e is MatchAllQuery)).ToArray();
+                    if (filter.Length == 0) filter = null;
+                }
+
+                if (must == null && filter == null && bq.ShouldQueries == null && bq.NotQueries == null)
+                {
+                    return new MatchAllQuery();
+                }
+
+                return new BoolQuery(must, bq.NotQueries, bq.ShouldQueries, filter);
+            }
+
+            return query;
+        }
+
+        public static IQuery RemoveNotFilters(this IQuery query, string field, object[] values = null)
+        {
+            if (query is ConstantScoreQuery)
+            {
+                return new ConstantScoreQuery((query as ConstantScoreQuery).Query.RemoveNotFilters(field, values));
+            }
+
+            if (query is FunctionScoreQuery)
+            {
+                var fq = query as FunctionScoreQuery;
+                return new FunctionScoreQuery(fq.Query.RemoveNotFilters(field, values), fq.Functions);
+            }
+
+            if (query is BoolQuery)
+            {
+                var bq = query as BoolQuery;
+
+                if (bq.NotQueries != null && bq.NotQueries.Length > 0)
+                {
+                    for (int i = 0; i < bq.NotQueries.Length; i++)
+                    {
+                        var nq = bq.NotQueries[i];
+
+                        if (nq is TermQuery)
+                        {
+                            var tq = nq as TermQuery;
+                            if (tq.Field == field && (values == null || values.Contains(tq.Value)))
+                            {
+                                bq.NotQueries[i] = null;
+                            }
+                        }
+                        else if (nq is TermsQuery)
+                        {
+                            var tq = nq as TermsQuery;
+                            if (tq.Field == field)
+                            {
+                                if (values == null)
+                                {
+                                    bq.NotQueries[i] = null;
+                                }
+                                else
+                                {
+                                    var except = tq.Values.Except(values).ToArray();
+                                    if (except.Length == 0)
+                                    {
+                                        bq.NotQueries[i] = new MatchAllQuery();
+                                    }
+                                    else
+                                    {
+                                        bq.NotQueries[i] = new TermsQuery(tq.Field, except);
+                                    }
+                                }
+                            }
+                        }
+                        else if (nq is BoolQuery)
+                        {
+                            bq.NotQueries[i] = RemoveNotFilters(nq, field, values);
+                        }
+                    }
+
+                    var mustnot = bq.NotQueries.Where(e => e != null && !(e is MatchAllQuery)).ToArray();
+
+                    if (mustnot.Length == 0) mustnot = null;
+
+                    if (mustnot == null && bq.MustQueries == null && bq.ShouldQueries == null && bq.FilterQueries == null)
+                    {
+                        return new MatchAllQuery();
+                    }
+
+                    return new BoolQuery(bq.MustQueries, mustnot, bq.ShouldQueries, bq.FilterQueries);
+                }
+            }
+
+            return query;
+        }
+
+        #region Query parsing
 
         private static TermQuery ParseTermQuery(JsonObject jo)
         {
@@ -350,6 +619,81 @@ namespace YM.Elasticsearch.Query
             return new PercolateQuery(field, document);
         }
 
+        private static NestedQuery ParseNestedQuery(JsonObject jo)
+        {
+            string path = null;
+            IQuery query = null;
+
+            foreach (var jp in jo.Properties())
+            {
+                switch (jp.Name)
+                {
+                    case "path": path = jp.Value.Get<string>(); break;
+                    case "query": query = jp.Value.Get<JsonObject>().ToQuery(); break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(path) || query == null)
+            {
+                return null;
+            }
+
+            return new NestedQuery(path, query);
+        }
+
+        private static SpanTermQuery ParseSpanTermQuery(JsonObject jo)
+        {
+            var jp = jo.Properties()[0];
+            var value = jp.Value.Get();
+            if (value == null)
+            {
+                return null;
+            }
+
+            return new SpanTermQuery(jp.Name, value);
+        }
+
+        private static SpanNearQuery ParseSpanNearQuery(JsonObject jo)
+        {
+            IQuery[] clauses = null;
+            bool ordered = false;
+            int? slop = null;
+
+            foreach (var jp in jo.Properties())
+            {
+                switch (jp.Name)
+                {
+                    case "clauses": clauses = jp.Value.Get<JsonArray>().Select(e => e.Get<JsonObject>().ToQuery()).ToArray(); break;
+                    case "in_order": ordered = jp.Value.Get<bool>(); break;
+                    case "slop": slop = jp.Value.Get<int>(); break;
+                }
+            }
+
+            if (clauses == null || clauses.Length == 0)
+            {
+                return null;
+            }
+
+            return new SpanNearQuery(clauses, ordered, slop);
+        }
+
+        private static SpanMultiTermQuery ParseSpanMultiTermQuery(JsonObject jo)
+        {
+            var match = jo.Property<JsonObject>("match");
+            if (match == null)
+            {
+                return null;
+            }
+
+            var query = match.ToQuery();
+            if (query == null)
+            {
+                return null;
+            }
+
+            return new SpanMultiTermQuery(query);
+        }
+
         private static IQuery[] GetBoolQueries(JsonValue jv)
         {
             if (jv.Type == JsonType.Object)
@@ -383,5 +727,7 @@ namespace YM.Elasticsearch.Query
 
             return MultiMatchType.BestFields;
         }
+
+        #endregion
     }
 }

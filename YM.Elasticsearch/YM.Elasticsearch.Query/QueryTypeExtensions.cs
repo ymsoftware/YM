@@ -22,7 +22,11 @@
                 case QueryType.BoolQuery: return "bool";
                 case QueryType.ConstantScoreQuery: return "constant_score";
                 case QueryType.FunctionScoreQuery: return "function_score";
-                case QueryType.PercolateQuery: return "percolate";                
+                case QueryType.PercolateQuery: return "percolate";
+                case QueryType.NestedQuery: return "nested";
+                case QueryType.SpanTermQuery: return "span_term";
+                case QueryType.SpanNearQuery: return "span_near";
+                case QueryType.SpanMultiTermQuery: return "span_multi";
             }
 
             return null;

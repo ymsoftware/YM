@@ -4,19 +4,29 @@ namespace YM.Elasticsearch.Client.Search
 {
     public class SearchResponse : JsonDocument
     {
+        private readonly JsonObject _jo;
+
+        public bool IsSuccess { get; private set; }
         public int Took { get; private set; }
         public bool IsTimedOut { get; private set; }
         public SearchHits Hits { get; private set; }
 
-        public SearchResponse(JsonObject jo)
+        public SearchResponse(RestResponse response)
         {
-            Took = jo.Property<int>("took");
-            IsTimedOut = jo.Property<bool>("timed_out");
+            _jo = JsonObject.Parse(response.Content);
 
-            var hits = jo.Property<JsonObject>("hits");
-            if (hits != null && !hits.IsEmpty)
+            if (response.Http.IsSuccessStatusCode)
             {
-                Hits = new SearchHits(hits);
+                IsSuccess = true;                
+
+                Took = _jo.Property<int>("took");
+                IsTimedOut = _jo.Property<bool>("timed_out");
+
+                var hits = _jo.Property<JsonObject>("hits");
+                if (hits != null && !hits.IsEmpty)
+                {
+                    Hits = new SearchHits(hits);
+                }
             }
         }
 
@@ -30,16 +40,7 @@ namespace YM.Elasticsearch.Client.Search
 
         public override JsonObject ToJson()
         {
-            var jo = new JsonObject()
-                .Add("took", Took)
-                .Add("timed_out", IsTimedOut);
-
-            if (Hits != null)
-            {
-                jo.Add("hits", Hits.ToJson());
-            }
-
-            return jo;
+            return _jo;
         }
     }
 }

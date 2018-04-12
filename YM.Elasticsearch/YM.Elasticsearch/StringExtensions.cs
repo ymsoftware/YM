@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 
 namespace YM.Elasticsearch
 {
     public static class StringExtensions
     {
+        private const string DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
+
         public static bool Is(this string s, string compare, bool ignoreSpaces = false)
         {
             string test = ignoreSpaces ? s.Trim() : s;
@@ -155,6 +158,18 @@ namespace YM.Elasticsearch
             }
 
             return null;
+        }
+
+        public static string ToElasticsearchDate(this DateTime date, bool ignoreDefault = true)
+        {
+            if (date == default(DateTime) && ignoreDefault) return null;
+            return date.ToString(DATE_FORMAT);
+        }
+
+        public static DateTime FromElasticsearchDate(this string date)
+        {
+            if (string.IsNullOrWhiteSpace(date)) return default(DateTime);
+            return DateTime.ParseExact(date, DATE_FORMAT, CultureInfo.InvariantCulture).ToUniversalTime();
         }
     }
 }

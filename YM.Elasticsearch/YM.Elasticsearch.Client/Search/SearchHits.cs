@@ -15,7 +15,7 @@ namespace YM.Elasticsearch.Client.Search
             MaxScore = hits.Property<double>("max_score");
 
             var ja = hits.Property<JsonArray>("hits");
-            if (ja != null && ja.Length > 0)
+            if (ja != null)
             {
                 Hits = ja.Select(e => new SearchHit(e.Get<JsonObject>())).ToArray();
             }
