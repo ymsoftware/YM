@@ -48,8 +48,13 @@ namespace YM.Elasticsearch.Query
                 case "nested": return ParseNestedQuery(query);                
                 case "span_term": return ParseSpanTermQuery(query);
                 case "span_near": return ParseSpanNearQuery(query);
-                case "span_multi": return ParseSpanMultiTermQuery(query);
+                case "span_multi": return ParseSpanMultiTermQuery(query);                
                 case "match_all": return new MatchAllQuery();
+
+                //1.x leftovers
+                case "and": return new BoolQuery().Must(GetBoolQueries(query));
+                case "or": return new BoolQuery().Should(GetBoolQueries(query));
+                case "not": return new BoolQuery().Not(GetBoolQueries(query));
             }
 
             return null;
@@ -692,6 +697,11 @@ namespace YM.Elasticsearch.Query
             }
 
             return new SpanMultiTermQuery(query);
+        }
+
+        private static BoolQuery ParseNotQuery(JsonObject jo)
+        {
+            return new BoolQuery().Not(GetBoolQueries(jo));
         }
 
         private static IQuery[] GetBoolQueries(JsonValue jv)

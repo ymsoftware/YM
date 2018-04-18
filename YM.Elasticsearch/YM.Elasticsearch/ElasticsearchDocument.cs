@@ -4,43 +4,50 @@ namespace YM.Elasticsearch
 {
     public class ElasticsearchDocument : JsonDocument
     {
+        public const string DEFAULT_TYPE = "doc";
+        public const string ID = "_id";
+        public const string INDEX = "_index";
+        public const string SOURCE = "_source";
+        public const string TYPE = "_type";
+        public const string VERSION = "_version";
+
         public string Id { get; private set; }
         public string Index { get; private set; }
         public JsonObject Source { get; private set; }
         public string Type { get; private set; }
         public int Version { get; private set; }
 
-        public ElasticsearchDocument(string id, JsonObject source, string index, string type = "doc", int version = 0)
+        public ElasticsearchDocument(string id, JsonObject source, string index, string type = null, int version = 0)
         {
             Id = id;
             Index = index;
             Source = source;
-            Type = type;
+            Type = string.IsNullOrWhiteSpace(type) ? DEFAULT_TYPE : type;
             Version = version;
         }
 
         public ElasticsearchDocument(JsonObject document)
         {
-            Id = document.Property<string>("_id");
-            Index = document.Property<string>("_index");
-            Source = document.Property<JsonObject>("_source");
-            Type = document.Property<string>("_type");
-            Version = document.Property<int>("_version");
+            Id = document.Property<string>(ID);
+            Index = document.Property<string>(INDEX);
+            Source = document.Property<JsonObject>(SOURCE);
+            Type = document.Property<string>(TYPE);
+            Version = document.Property<int>(VERSION);
         }
 
         public override JsonObject ToJson()
         {
             var jo = new JsonObject()
-                .Add("_id", Id)
-                .Add("_index", Index)
-                .Add("_type", Type);
+                .Add(ID, Id)
+                .Add(INDEX, Index)
+                .Add(TYPE, Type);
 
             if (Version > 0)
             {
-                jo.Add("_version", Version);
+                jo.Add(VERSION, Version);
             }
 
-            jo.Add("_source", Source);
+            jo.Add(SOURCE, Source);
 
             return jo;
         }
