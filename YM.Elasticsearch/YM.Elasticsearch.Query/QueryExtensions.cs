@@ -2,6 +2,7 @@
 using System.Linq;
 using YM.Elasticsearch.Query.CompoundQueries;
 using YM.Elasticsearch.Query.FullTextQueries;
+using YM.Elasticsearch.Query.FullTextQueries.QueryString;
 using YM.Elasticsearch.Query.JoiningQueries;
 using YM.Elasticsearch.Query.SpanQueries;
 using YM.Elasticsearch.Query.SpecializedQueries;
@@ -318,6 +319,11 @@ namespace YM.Elasticsearch.Query
             }
 
             return query;
+        }
+
+        public static QueryString ToQueryString(this string s, bool fixQuery = true)
+        {
+            return new QueryStringParser().Parse(s);
         }
 
         #region Query parsing

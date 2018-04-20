@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="CompoundQueriesTests.cs" />
     <Compile Include="ElasticsearchClientTests.cs" />
+    <Compile Include="QueryStringTests.cs" />
     <Compile Include="SpecializedQueriesTests.cs" />
     <Compile Include="QueryTemplatesTests.cs" />
     <Compile Include="FullTextQueriesTests.cs" />
