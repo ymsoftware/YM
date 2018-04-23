@@ -41,7 +41,23 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
                     var query = ((QueryStringQueryToken)token).Query;
                     if (query is MatchQuery)
                     {
-                        terms.AddRange(((MatchQuery)query).Value.ToString().Split(' '));
+                        var values = ((MatchQuery)query)
+                            .Value
+                            .ToString()
+                            .Split(new char[] {
+                                QueryStringParser.TOKEN_SPACE,
+                                QueryStringParser.TOKEN_LEFT_PAREN,
+                                QueryStringParser.TOKEN_RIGHT_PAREN,
+                                QueryStringParser.TOKEN_PLUS,
+                                QueryStringParser.TOKEN_MINUS
+                            })
+                            .Where(e => !string.IsNullOrWhiteSpace(e)
+                                && e != "AND"
+                                && e != "OR"
+                                && e != "NOT")
+                            .ToArray();
+
+                        terms.AddRange(values);
                     }
                 }
                 else if (token.Type == QueryStringTokenType.Group)
