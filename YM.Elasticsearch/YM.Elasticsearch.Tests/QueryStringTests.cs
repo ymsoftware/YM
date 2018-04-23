@@ -10,7 +10,7 @@ namespace YM.Elasticsearch.Tests
     public class QueryStringTests
     {
         [TestMethod]
-        public void field_query()
+        public void Field_query_must_parse_correctly()
         {
             string query = "status:active";
             var qs = query.ToQueryString();
@@ -107,18 +107,10 @@ namespace YM.Elasticsearch.Tests
             Assert.IsTrue(token.Type == QueryStringTokenType.Query);
             Assert.IsTrue(((QueryStringQueryToken)token).Query is RangeQuery);
             Assert.IsTrue(qs.ToString() == query);
-
-            //query = "status: active";
-            //qs = query.ToQueryString();
-            //Assert.IsTrue(qs.Tokens.Length == 1);
-            //token = qs.Tokens[0];
-            //Assert.IsTrue(token.Type == QueryStringTokenType.Query);
-            //Assert.IsTrue(((QueryStringQueryToken)token).Query is MatchQuery);
-            //Assert.IsTrue(qs.ToString() == "active");
         }
 
         [TestMethod]
-        public void term_query()
+        public void Term_query_must_parse_correctly()
         {
             string query = "quick brown +fox -news";
             var qs = query.ToQueryString();
@@ -133,6 +125,75 @@ namespace YM.Elasticsearch.Tests
             query = "quikc~ brwn~2 foks~ \"fox quick\"~5";
             qs = query.ToQueryString();
             Assert.IsTrue(qs.Tokens.Length == 8);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "qu?ck bro*";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 2);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "quick OR brown AND fox AND NOT news";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 8);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "(quick OR brown) AND fox";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 3);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "status:(active OR pending) title:(full text search)^2";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 3);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "(status:(active OR pending) AND title:(full text search)^2) OR (status:inactive AND title:deleted)";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 3);
+            Assert.IsTrue(qs.ToString() == query);
+        }
+
+        [TestMethod]
+        public void String_query_must_return_correct_terms()
+        {
+            string query = "quick brown +fox -news";
+            var qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 6);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "\"john smith\" +fox -news";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 5);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "quikc~ brwn~2 foks~ \"fox quick\"~5";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 8);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "qu?ck bro*";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 2);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "quick OR brown AND fox AND NOT news";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 8);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "(quick OR brown) AND fox";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 3);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "status:(active OR pending) title:(full text search)^2";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 3);
+            Assert.IsTrue(qs.ToString() == query);
+
+            query = "(status:(active OR pending) AND title:(full text search)^2) OR (status:inactive AND title:deleted)";
+            qs = query.ToQueryString();
+            Assert.IsTrue(qs.Tokens.Length == 3);
             Assert.IsTrue(qs.ToString() == query);
         }
     }

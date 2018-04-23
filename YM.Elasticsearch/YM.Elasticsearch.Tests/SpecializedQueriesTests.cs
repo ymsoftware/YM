@@ -10,7 +10,7 @@ namespace YM.Elasticsearch.Tests
     public class SpecializedQueriesTests
     {
         [TestMethod]
-        public void percolate_query()
+        public void Percolate_query_must_transform_correclty_to_ES()
         {
             var document = new JsonObject().Add("headline", "YM");
             var query = new PercolateQuery("query", document);

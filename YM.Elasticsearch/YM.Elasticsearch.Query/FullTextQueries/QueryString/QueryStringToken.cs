@@ -22,7 +22,7 @@
                 case QueryStringTokenType.Boost: return ((QueryStringBoostToken)this).ToString();
                 case QueryStringTokenType.Term: return ((QueryStringTermToken)this).ToString();
                 case QueryStringTokenType.Query: return ((QueryStringQueryToken)this).ToString();
-                case QueryStringTokenType.Group: return string.Format("({0})", (QueryStringGroupToken)this);
+                case QueryStringTokenType.Group: return ((QueryStringGroupToken)this).ToString();
             }
 
             return "";

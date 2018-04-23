@@ -16,7 +16,7 @@ namespace YM.Elasticsearch.Tests
     public class ElasticsearchClientTests
     {
         [TestMethod]
-        public async Task cluster()
+        public async Task Cluster_must_return_correct_version()
         {
             var es = new ElasticsearchClient();
             var cr = await es.GetClusterAsync();
@@ -25,7 +25,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public async Task document_crud()
+        public async Task Document_crud_must_complete_all_crud_operations()
         {
             var es = new ElasticsearchClient();
 
@@ -85,7 +85,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public async Task alias()
+        public async Task Alias_must_map_correctly()
         {
             var es = new ElasticsearchClient();
 
@@ -136,7 +136,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public async Task bulk_document_crud()
+        public async Task Bulk_document_crud_must_process_all_documents_correctly()
         {
             var es = new ElasticsearchClient();
 
@@ -174,7 +174,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public async Task search_request()
+        public async Task Search_request_must_transform_to_correct_ES_request()
         {
             var es = new ElasticsearchClient();
 
@@ -227,7 +227,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public async Task scroll_request()
+        public async Task Scroll_request_must_scroll_correctly()
         {
             var es = new ElasticsearchClient();
 
@@ -270,7 +270,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public async Task search_after_request()
+        public async Task Search_after_request_must_return_correct_results()
         {
             var es = new ElasticsearchClient();
 

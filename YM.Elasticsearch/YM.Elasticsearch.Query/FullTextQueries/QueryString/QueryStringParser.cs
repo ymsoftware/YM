@@ -28,6 +28,7 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
         public const char TOKEN_O = 'O';
         public const char TOKEN_BOOST = '^';
         public const char TOKEN_FUZZY = '~';
+        public const char TOKEN_FORWARD_SLASH = '/';
 
 
         public const char TOKEN_NULL = '\0';
@@ -65,20 +66,24 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
         public const char TOKEN_S = 's';
         
         public const char TOKEN_U = 'u';
-        public const char TOKEN_V = 'v';
-        
+        public const char TOKEN_V = 'v';               
 
-        public QueryString Parse(char[] chars, bool fixQuery = true)
+        public QueryString Parse(string query)
         {
-            if (chars == null || chars.Length == 0)
+            if (string.IsNullOrWhiteSpace(query))
             {
                 return null;
             }
 
-            int index = 0;
+            var chars = query.ToCharArray();
             int size = chars.Length;
-            int start = 0;
-            bool quote = false;
+            int index = 0;
+
+            return Parse(chars, size, ref index);
+        }
+
+        private QueryString Parse(char[] chars, int size, ref int index)
+        {            
             var tokens = new List<QueryStringToken>();
 
             SkipWhitespace(chars, size, ref index);
@@ -87,49 +92,113 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
             {
                 char c = chars[index];
 
-                if (quote)
+                switch (c)
                 {
-                    if (c == TOKEN_QUOTE)
-                    {
-                        quote = false;
-                        ParseTerm(start, index, chars, size, tokens);
-                        start = index + 1;
-                    }
+                    case TOKEN_LEFT_PAREN:
+                        index++;
+                        var qs = Parse(chars, size, ref index);
+                        if (qs == null)
+                        {
+                            throw new QueryStringParseException("Expected group, did not find ')'");
+                        }
+                        tokens.Add(new QueryStringGroupToken(qs));
+                        break;
+
+                    case TOKEN_RIGHT_PAREN:
+                        index++;
+                        return new QueryString(tokens.ToArray());
+
+                    case TOKEN_QUOTE:
+                        string phrase = ParseString(chars, size, ref index);
+                        tokens.Add(new QueryStringTermToken(phrase));
+                        break;
+
+                    case TOKEN_PLUS:
+                        tokens.Add(ParseMust(chars, size, ref index));
+                        break;
+
+                    case TOKEN_MINUS:
+                        tokens.Add(ParseMustNot(chars, size, ref index));
+                        break;
+
+                    case TOKEN_FUZZY:
+                        tokens.Add(ParseFuzzy(chars, size, ref index));
+                        break;
+
+                    case TOKEN_BOOST:
+                        tokens.Add(ParseBoost(chars, size, ref index));
+                        break;
+
+                    case TOKEN_SPACE:
+                        break;
+
+                    default:
+                        tokens.Add(ParseText(chars, size, ref index));
+                        break;
+
                 }
-                else
+
+                index++;
+            }
+
+            return new QueryString(tokens.ToArray());
+        }
+
+        private QueryStringToken ParseMust(char[] chars, int size, ref int index)
+        {
+            char c = chars[index + 1];
+
+            if (Char.IsLetter(c))
+            {
+                return new QueryStringToken(QueryStringTokenType.Must);
+            }
+
+            throw new QueryStringParseException("Expected letter, found [{0}]", c);
+        }
+
+        private QueryStringToken ParseMustNot(char[] chars, int size, ref int index)
+        {
+            char c = chars[index + 1];
+
+            if (Char.IsLetter(c))
+            {
+                return new QueryStringToken(QueryStringTokenType.MustNot);
+            }
+
+            throw new QueryStringParseException("Expected letter, found [{0}]", c);
+        }
+
+        private QueryStringToken ParseText(char[] chars, int size, ref int index)
+        {
+            int start = index;
+            bool @break = false;
+
+            while (index < size)
+            {
+                char c = chars[index];
+
+                switch (c)
                 {
-                    switch (c)
-                    {
-                        case TOKEN_PLUS:
-                        case TOKEN_MINUS:
-                            ParseSign(c, chars, size, tokens, fixQuery, ref index);
-                            start = index;
-                            break;
-                        case TOKEN_SPACE:
-                            ParseTerm(start, index - 1, chars, size, tokens);
-                            c = SkipWhitespace(chars, size, ref index);
-                            start = index;
-                            index--;
-                            break;
-                        case TOKEN_QUOTE:
-                            quote = true;
-                            start = index;
-                            break;
-                        case TOKEN_COLON:
-                            ParseQuery(start, chars, size, tokens, fixQuery, ref index);
-                            start = index;
-                            break;
-                        case TOKEN_FUZZY:
-                            ParseTerm(start, index - 1, chars, size, tokens);
-                            ParseFuzzy(chars, size, tokens, fixQuery, ref index);
-                            start = index;
-                            break;
-                        case TOKEN_BOOST:
-                            ParseTerm(start, index - 1, chars, size, tokens);
-                            ParseBoost(chars, size, tokens, fixQuery, ref index);
-                            start = index;
-                            break;
-                    }
+                    case TOKEN_SPACE:
+                    case TOKEN_RIGHT_PAREN:
+                    case TOKEN_FUZZY:
+                    case TOKEN_BOOST:
+                        index--;
+                        @break = true;
+                        break;
+
+                    case TOKEN_COLON:
+                        return ParseQuery(start, chars, size, ref index);
+
+                    case TOKEN_QUOTE:
+                    case TOKEN_PLUS:
+                    case TOKEN_MINUS:
+                        throw new QueryStringParseException("Unexpected character {0}", c);                    
+                }
+
+                if (@break)
+                {
+                    break;
                 }
 
                 index++;
@@ -140,72 +209,24 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
                 index = size - 1;
             }
 
-            ParseTerm(start, index, chars, size, tokens);
-
-            return new QueryString(tokens.ToArray());
-        }
-
-        public QueryString Parse(string query)
-        {
-            if (string.IsNullOrWhiteSpace(query))
+            if (index > start)
             {
-                return null;
-            }
+                string term = AsString(chars, start, index);
 
-            return Parse(query.ToCharArray());
-        }
-
-        private void ParseSign(char sign, char[] chars, int size, List<QueryStringToken> tokens, bool fixQuery, ref int index)
-        {
-            index++;
-
-            if (index == size)
-            {
-                if (fixQuery)
+                switch (term)
                 {
-                    return;
+                    case "AND": return new QueryStringToken(QueryStringTokenType.And);
+                    case "OR": return new QueryStringToken(QueryStringTokenType.Or);
+                    case "NOT": return new QueryStringToken(QueryStringTokenType.Not);
                 }
-                else
-                {
-                    throw new QueryStringParseException("Expected field or term, found EOL");
-                }
+
+                return new QueryStringTermToken(term);
             }
 
-            char c = chars[index];
-
-            if (Char.IsLetter(c))
-            {
-                switch (sign)
-                {
-                    case TOKEN_PLUS:
-                        tokens.Add(new QueryStringToken(QueryStringTokenType.Must));
-                        return;
-                    case TOKEN_MINUS:
-                        tokens.Add(new QueryStringToken(QueryStringTokenType.MustNot));
-                        return;
-                }
-            }
-
-            if (fixQuery)
-            {
-                return;
-            }
-            else
-            {
-                throw new QueryStringParseException("Expected field or term, found ' '");
-            }
+            throw new QueryStringParseException("Expected term, failed to parse it");
         }
 
-        private void ParseTerm(int start, int end, char[] chars, int size, List<QueryStringToken> tokens)
-        {
-            if (end > start)
-            {
-                string term = AsString(chars, start, end);
-                tokens.Add(new QueryStringTermToken(term));
-            }
-        }
-
-        private void ParseQuery(int start, char[] chars, int size, List<QueryStringToken> tokens, bool fixQuery, ref int index)
+        private QueryStringToken ParseQuery(int start, char[] chars, int size, ref int index)
         {
             int end = index - 1;
 
@@ -221,157 +242,107 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
                     }
                     else
                     {
-                        if (fixQuery)
-                        {
-                            index++;
-                            return;
-                        }
-                        else
-                        {
-                            throw new QueryStringParseException("Expected .\\*, found something else");
-                        }
+                        throw new QueryStringParseException("Expected .\\*, found something else");
                     }
                 }
                 else if (!Char.IsLetter(c) && c != TOKEN_UNDERSCORE)
                 {
-                    if (fixQuery)
-                    {
-                        index++;
-                        return;
-                    }
-                    else
-                    {
-                        throw new QueryStringParseException("Expected letter or _, found {0}", c);
-                    }
+                    throw new QueryStringParseException("Expected letter or _, found {0}", c);
                 }
             }
 
             string field = AsString(chars, start, end);
-
-            QueryStringQueryToken token = null;
 
             index++;
             switch (chars[index])
             {
                 case TOKEN_LEFT_CURLY:
                 case TOKEN_LEFT_SQUARE:
-                    token = ParseTwoHandsTermQuery(field, chars, size, fixQuery, ref index);
-                    break;
+                    return ParseTwoHandsTermQuery(field, chars, size, ref index);
                 case TOKEN_GT:
                 case TOKEN_LT:
-                    token = ParseOneHandTermQuery(field, chars, size, fixQuery, ref index);
-                    break;
+                    return ParseOneHandTermQuery(field, chars, size, ref index);
                 default:
-                    token = ParseMatchQuery(field, chars, size, fixQuery, ref index);
-                    break;
-            }            
-
-            if (token != null)
-            {
-                tokens.Add(token);
+                    return ParseMatchQuery(field, chars, size, ref index);
             }
+
+            throw new QueryStringParseException("Expected QueryStringToken, failed to parse it");
         }
 
-        private void ParseFuzzy(char[] chars, int size, List<QueryStringToken> tokens, bool fixQuery, ref int index)
+        private QueryStringToken ParseFuzzy(char[] chars, int size, ref int index)
         { 
             index++;
             int start = index;
-            int end = index;
             int proximity = 0;
 
             while (index < size)
             {
                 char c = chars[index];
-                if (c == TOKEN_SPACE)
+                if (c == TOKEN_SPACE || c == TOKEN_RIGHT_PAREN)
                 {
                     index--;
-                    end--;
                     break;
                 }
                 else if (!Char.IsDigit(c))
                 {
-                    if (fixQuery)
-                    {
-                        index--;
-                        break;
-                    }
-                    else
-                    {
-                        throw new QueryStringParseException("Expected numeric value, found {0}", c);
-                    }
+                    throw new QueryStringParseException("Expected numeric value, found {0}", c);
                 }
 
                 index++;
-                end++;
             }
 
-            if (end == size)
+            if (index >= size)
             {
-                end--;
+                index = size - 1;
             }
 
-            if (start <= end)
+            if (start <= index)
             {
-                string number = AsString(chars, start, end);
+                string number = AsString(chars, start, index);
                 proximity = int.Parse(number);
             }
 
-            tokens.Add(new QueryStringFuzzyToken(proximity));
+            return new QueryStringFuzzyToken(proximity);
         }
 
-        private void ParseBoost(char[] chars, int size, List<QueryStringToken> tokens, bool fixQuery, ref int index)
+        private QueryStringToken ParseBoost(char[] chars, int size, ref int index)
         {
             index++;
             int start = index;
-            int end = index;
             int boost = 0;
 
             while (index < size)
             {
                 char c = chars[index];
-                if (c == TOKEN_SPACE)
+                if (c == TOKEN_SPACE || c == TOKEN_RIGHT_PAREN)
                 {
                     index--;
-                    end--;
                     break;
                 }
                 else if (!Char.IsDigit(c))
                 {
-                    if (fixQuery)
-                    {
-                        index--;
-                        break;
-                    }
-                    else
-                    {
-                        throw new QueryStringParseException("Expected numeric value, found {0}", c);
-                    }
+                    throw new QueryStringParseException("Expected numeric value, found {0}", c);
                 }
 
                 index++;
-                end++;
             }
 
-            if (end == size)
+            if (index >= size)
             {
-                end--;
+                index = size - 1;
             }
 
-            if (start <= end)
+            if (start <= index)
             {
-                string number = AsString(chars, start, end);
+                string number = AsString(chars, start, index);
                 boost = int.Parse(number);
-            }
-            else if (fixQuery)
-            {
-                throw new QueryStringParseException("Expected numeric value, found nothing");
+                return new QueryStringBoostToken(boost);
             }
 
-            tokens.Add(new QueryStringBoostToken(boost));
+            throw new QueryStringParseException("Expected numeric value, found nothing");
         }
-
-
-        private QueryStringQueryToken ParseMatchQuery(string field, char[] chars, int size, bool fixQuery, ref int index)
+        
+        private QueryStringQueryToken ParseMatchQuery(string field, char[] chars, int size, ref int index)
         {
             string value = null;
 
@@ -385,9 +356,17 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
             {                
                 int start = index;
                 bool space = false;
+                bool regex = false;
 
                 bool group = c == TOKEN_LEFT_PAREN;
-                if (group) index++;
+                if (group)
+                {
+                    index++;
+                }
+                else if (c == TOKEN_FORWARD_SLASH)
+                {
+                    regex = true;
+                }
 
                 while (index < size)
                 {
@@ -398,9 +377,17 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
                         space = true;
                         break;
                     }
-                    else if (c == TOKEN_RIGHT_PAREN && group)
+                    else if (c == TOKEN_RIGHT_PAREN)
                     {
-                        break;
+                        if (group)
+                        {
+                            break;
+                        }
+                        else if (!regex)
+                        {
+                            space = true;
+                            break;
+                        }                        
                     }
 
                     index++;
@@ -419,14 +406,7 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                if (fixQuery)
-                {
-                    return null;
-                }
-                else
-                {
-                    throw new QueryStringParseException("Expected field value, found nothing");
-                }
+                throw new QueryStringParseException("Expected field value, found nothing");
             }
             else
             {
@@ -434,7 +414,7 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
             }
         }
 
-        private QueryStringQueryToken ParseOneHandTermQuery(string field, char[] chars, int size, bool fixQuery, ref int index)
+        private QueryStringQueryToken ParseOneHandTermQuery(string field, char[] chars, int size, ref int index)
         {            
             char c = chars[index];
             bool lt = c == TOKEN_LT;
@@ -472,14 +452,7 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                if (fixQuery)
-                {
-                    return null;
-                }
-                else
-                {
-                    throw new QueryStringParseException("Expected field value, found nothing");
-                }
+                throw new QueryStringParseException("Expected field value, found nothing");
             }
             else
             {
@@ -489,7 +462,7 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
             }
         }
 
-        private QueryStringQueryToken ParseTwoHandsTermQuery(string field, char[] chars, int size, bool fixQuery, ref int index)
+        private QueryStringQueryToken ParseTwoHandsTermQuery(string field, char[] chars, int size, ref int index)
         {
             bool eq = chars[index++] == TOKEN_LEFT_SQUARE;
 
@@ -532,14 +505,7 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
 
             if (from == null && to == null)
             {
-                if (fixQuery)
-                {
-                    return null;
-                }
-                else
-                {
-                    throw new QueryStringParseException("Expected range values, found nothing");
-                }
+                throw new QueryStringParseException("Expected range values, found nothing");
             }
             else
             {

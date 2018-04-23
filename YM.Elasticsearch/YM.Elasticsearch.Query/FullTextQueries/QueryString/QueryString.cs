@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
 {
@@ -11,8 +13,54 @@ namespace YM.Elasticsearch.Query.FullTextQueries.QueryString
             Tokens = tokens;
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                return Tokens == null || Tokens.Length == 0;
+            }
+        }
+
+        public string[] GetTerms()
+        {
+            if (IsEmpty)
+            {
+                return null;
+            }
+
+            var terms = new List<string>();
+
+            foreach (var token in Tokens)
+            {
+                if (token.Type == QueryStringTokenType.Term)
+                {
+                    terms.Add(((QueryStringTermToken)token).Term);
+                }
+                else if (token.Type == QueryStringTokenType.Query)
+                {
+                    var query = ((QueryStringQueryToken)token).Query;
+                    if (query is MatchQuery)
+                    {
+                        terms.AddRange(((MatchQuery)query).Value.ToString().Split(' '));
+                    }
+                }
+                else if (token.Type == QueryStringTokenType.Group)
+                {
+                    var group = ((QueryStringGroupToken)token).Group;
+                    terms.AddRange(group.GetTerms());
+                }
+            }
+
+            return terms.Distinct().ToArray();
+        }
+
         public override string ToString()
         {
+            if (IsEmpty)
+            {
+                return "";
+            }
+
             var sb = new StringBuilder();
 
             QueryStringToken prev = null;

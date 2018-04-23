@@ -9,7 +9,7 @@ namespace YM.Elasticsearch.Tests
     public class TemQueriesTests
     {
         [TestMethod]
-        public void term_query()
+        public void Term_query_must_transform_correclty_to_ES()
         {
             var query = new TermQuery("type", "text");
             Assert.IsTrue(query.Field == "type");
@@ -25,7 +25,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void terms_query()
+        public void Terms_query_must_transform_correclty_to_ES()
         {
             var query = new TermsQuery("type", new string[] { "text", "photo" });
             Assert.IsTrue(query.Field == "type");
@@ -43,7 +43,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void prefix_query()
+        public void Prefix_query_must_transform_correclty_to_ES()
         {
             var query = new PrefixQuery("type", "te");
             Assert.IsTrue(query.Field == "type");
@@ -59,7 +59,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void wildcrad_query()
+        public void Wildcrad_query_must_transform_correclty_to_ES()
         {
             var query = new WildcardQuery("type", "te*t");
             Assert.IsTrue(query.Field == "type");
@@ -75,7 +75,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void range_query()
+        public void Range_query_must_transform_correclty_to_ES()
         {
             var query = new RangeQuery("date", "now-1d", "now");
             Assert.IsTrue(query.Field == "date");
@@ -107,7 +107,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void exists_query()
+        public void Exists_query_must_transform_correclty_to_ES()
         {
             var query = new ExistsQuery("type");
             Assert.IsTrue(query.Field == "field");

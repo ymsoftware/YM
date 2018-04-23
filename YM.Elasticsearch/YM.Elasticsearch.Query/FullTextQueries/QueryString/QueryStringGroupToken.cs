@@ -12,7 +12,7 @@
 
         public override string ToString()
         {
-            return Group.ToString();
+            return string.Format("({0})", Group);
         }
     }
 }

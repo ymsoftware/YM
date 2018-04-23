@@ -9,7 +9,7 @@ namespace YM.Elasticsearch.Tests
     public class FullTextQueriesTests
     {
         [TestMethod]
-        public void match_query()
+        public void Match_query_must_transform_correclty_to_ES()
         {
             var query = new MatchQuery("headline", "YM");
             Assert.IsTrue(query.Field == "headline");
@@ -45,7 +45,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void match_phrase_query()
+        public void Match_phrase_query_must_transform_correclty_to_ES()
         {
             var query = new MatchPhraseQuery("headline", "Yuri Metelkin");
             Assert.IsTrue(query.Field == "headline");
@@ -61,7 +61,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void match_prefix_phrase_query()
+        public void Match_prefix_phrase_query_must_transform_correclty_to_ES()
         {
             var query = new MatchPhrasePrefixQuery("headline", "Yuri M");
             Assert.IsTrue(query.Field == "headline");
@@ -77,7 +77,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void query_string_query()
+        public void Query_string_query_must_transform_correclty_to_ES()
         {
             var query = new QueryStringQuery("Yuri Metelkin", new string[] { "head" }, true);
             Assert.IsTrue(query.Query == "Yuri Metelkin");
@@ -109,7 +109,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void simple_query_string_query()
+        public void Simple_query_string_query_must_transform_correclty_to_ES()
         {
             var query = new SimpleQueryStringQuery("\"fried eggs\" +(eggplant | potato) -frittata", new string[] { "head" }, true);
             Assert.IsTrue(query.Query == "\"fried eggs\" +(eggplant | potato) -frittata");
@@ -127,7 +127,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void multi_match_query()
+        public void Multi_match_query_must_transform_correclty_to_ES()
         {
             var query = new MultiMatchQuery("Yuri Metelkin", new string[] { "head", "body" }, MultiMatchType.MostFields, true, 0.3);
             Assert.IsTrue(query.Query == "Yuri Metelkin");

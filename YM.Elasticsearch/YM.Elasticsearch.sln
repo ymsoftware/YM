@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YM.Elasticsearch.Tests", "Y
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YM.Elasticsearch", "YM.Elasticsearch\YM.Elasticsearch.csproj", "{54D8CBF6-A3EF-4BCB-AD43-FB5DCCD8FCC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YM.Elasticsearch.Client", "YM.Elasticsearch.Client\YM.Elasticsearch.Client.csproj", "{0B9C6C4E-7C78-4B85-882C-CD74DE4BA379}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YM.Elasticsearch.Client", "YM.Elasticsearch.Client\YM.Elasticsearch.Client.csproj", "{0B9C6C4E-7C78-4B85-882C-CD74DE4BA379}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -10,7 +10,7 @@ namespace YM.Elasticsearch.Tests
     public class QueryTemplatesTests
     {
         [TestMethod]
-        public void test_templates()
+        public void Test_templates_must_match_inputs_to_outputs()
         {
             var tests = JsonArray.Parse(File.ReadAllText("test_templates.json"))
                 .Select(e => e.Get<JsonObject>())

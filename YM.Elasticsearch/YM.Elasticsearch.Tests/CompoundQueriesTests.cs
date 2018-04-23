@@ -11,7 +11,7 @@ namespace YM.Elasticsearch.Tests
     public class CompoundQueriesTests
     {
         [TestMethod]
-        public void bool_query()
+        public void Bool_query_must_transform_correclty_to_ES()
         {
             var query = new BoolQuery()
                 .Must(new MatchQuery("headline", "Yuri Metelkin", true))
@@ -84,7 +84,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void constant_score_query()
+        public void Constant_score_query_must_transform_correclty_to_ES()
         {
             var query = new ConstantScoreQuery(new MatchQuery("headline", "Yuri Metelkin", true));
 
@@ -105,7 +105,7 @@ namespace YM.Elasticsearch.Tests
         }
 
         [TestMethod]
-        public void function_score_query()
+        public void Function_score_query_must_transform_correclty_to_ES()
         {
             var functions = new IScoreFunction[]
             {
