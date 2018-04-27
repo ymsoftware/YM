@@ -230,5 +230,35 @@
         }
       }
     }
+  },
+  {
+    "template": {
+      "term": {
+        "type": "${type}"
+      }
+    },
+    "params": {
+      "type": [ "text", "photo" ]
+    },
+    "output": {
+      "terms": {
+        "type": [ "text", "photo" ]
+      }
+    }
+  },
+  {
+    "template": {
+      "terms": {
+        "type": "${types}"
+      }
+    },
+    "params": {
+      "types": "text"
+    },
+    "output": {
+      "term": {
+        "type": "text"
+      }
+    }
   }
 ]

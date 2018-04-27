@@ -46,10 +46,10 @@ namespace YM.Elasticsearch.Query
                 case "constant_score": return ParseConstantScoreQuery(query);
                 case "function_score": return ParseFunctionScoreQuery(query);
                 case "percolate": return ParsePercolateQuery(query);
-                case "nested": return ParseNestedQuery(query);                
+                case "nested": return ParseNestedQuery(query);
                 case "span_term": return ParseSpanTermQuery(query);
                 case "span_near": return ParseSpanNearQuery(query);
-                case "span_multi": return ParseSpanMultiTermQuery(query);                
+                case "span_multi": return ParseSpanMultiTermQuery(query);
                 case "match_all": return new MatchAllQuery();
 
                 //1.x leftovers
@@ -321,7 +321,7 @@ namespace YM.Elasticsearch.Query
             return query;
         }
 
-        public static QueryString ToQueryString(this string s, bool fixQuery = true)
+        public static QueryString ToQueryString(this string s)
         {
             return new QueryStringParser().Parse(s);
         }
@@ -343,13 +343,21 @@ namespace YM.Elasticsearch.Query
         private static TermsQuery ParseTermsQuery(JsonObject jo)
         {
             var jp = jo.Properties()[0];
-            var values = jp.Value.Get<JsonArray>();
-            if (values == null || values.Length == 0)
-            {
-                return null;
-            }
 
-            return new TermsQuery(jp.Name, values.Select(e => e.Get()).ToArray());
+            if (jp.Value.Type == JsonType.Array)
+            {
+                var values = jp.Value.Get<JsonArray>();
+                if (values.Length == 0)
+                {
+                    return null;
+                }
+
+                return new TermsQuery(jp.Name, values.Select(e => e.Get()).ToArray());
+            }
+            else
+            {
+                return new TermsQuery(jp.Name, new object[] { jp.Value.Get() });
+            }
         }
 
         private static PrefixQuery ParsePrefixQuery(JsonObject jo)

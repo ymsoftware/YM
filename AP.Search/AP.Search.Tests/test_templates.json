@@ -3,8 +3,10 @@
     "template": {
       "id": "1",
       "name": "1",
-      "index": "test",
-      "source": {
+      "index": "${index}",
+      "query_expand": "sg",
+      "field_aliases": "appl",
+      "es": {
         "query": {
           "term": {
             "type": "${type}"
@@ -13,7 +15,8 @@
       }
     },
     "params": {
-      "type": "text"
+      "type": "text",
+      "index": "appl"
     },
     "output": {
       "query": {
@@ -27,292 +30,154 @@
     "template": {
       "id": "2",
       "name": "2",
-      "index": "test",
-      "source": {
+      "index": "${index?appl}",
+      "query_expand": "sg",
+      "field_aliases": "appl",
+      "es": {
         "query": {
-          "term": {
-            "${field}": "${value}"
+          "bool": {
+            "must": {
+              "query_string": {
+                "query": "${query}",
+                "fields": [ "head", "body" ]
+              }
+            },
+            "should": {
+              "query_string": {
+                "query": "byline:${byline}"
+              }
+            }
           }
         },
         "_source": [ "head", "body" ]
       }
     },
     "params": {
-      "field": "type",
-      "value": "text"
+      "query": "quick fox",
+      "byline": "ap"
     },
     "output": {
       "query": {
-        "term": {
-          "type": "text"
+        "bool": {
+          "must": {
+            "bool": {
+              "must": {
+                "multi_match": {
+                  "query": "quick fox",
+                  "fields": [
+                    "head",
+                    "body"
+                  ]
+                }
+              },
+              "should": [
+                {
+                  "multi_match": {
+                    "query": "quick fox",
+                    "fields": [
+                      "head",
+                      "body"
+                    ],
+                    "type": "phrase"
+                  }
+                },
+                {
+                  "multi_match": {
+                    "query": "quick fox",
+                    "fields": [
+                      "head",
+                      "body"
+                    ],
+                    "operator": "and"
+                  }
+                }
+              ]
+            }
+          },
+          "should": {
+            "query_string": {
+              "query": "(bylines.by:ap OR editor.name:ap OR photographer.name:ap OR producer.name:ap OR captionwriter.name:ap)"
+            }
+          }
         }
       },
-      "_source": [ "head", "body" ]
+      "_source": [
+        "head",
+        "body"
+      ]
     }
   },
   {
     "template": {
       "id": "3",
       "name": "3",
-      "index": "test",
-      "source": {
-        "query": {
-          "term": {
-            "type": "${type}"
-          }
-        },
-        "sort": [ { "date": "desc" } ],
-        "_source": [ "head", "body" ]
-      }
-    },
-    "params": {},
-    "output": {
-      "sort": [ { "date": "desc" } ],
-      "_source": [ "head", "body" ]
-    }
-  },
-  {
-    "template": {
-      "id": "4",
-      "name": "4",
-      "index": "test",
-      "source": {
-        "query": {
-          "terms": {
-            "type": "${types}"
-          }
-        },
-        "sort": [ { "date": "desc" } ],
-        "_source": [ "head", "body" ]
-      }
-    },
-    "params": {
-      "types": [ "text", "photo" ]
-    },
-    "output": {
-      "query": {
-        "terms": {
-          "type": [ "text", "photo" ]
+      "index": "${index?appl-breaking}",
+      "query_expand": {
+        "px": {
+          "field": "${proximity_field?title}",
+          "slop": 30
         }
       },
-      "sort": [ { "date": "desc" } ],
-      "_source": [ "head", "body" ]
-    }
-  },
-  {
-    "template": {
-      "id": "5",
-      "name": "5",
-      "index": "test",
-      "source": {
-        "query": {
-          "terms": {
-            "type": [ "text", "${type}" ]
-          }
-        }
-      }
-    },
-    "params": {
-      "type": "photo"
-    },
-    "output": {
-      "query": {
-        "terms": {
-          "type": [ "text", "photo" ]
-        }
-      }
-    }
-  },
-  {
-    "template": {
-      "id": "6",
-      "name": "6",
-      "index": "test",
-      "source": {
+      "field_aliases": {
+        "byline": [ "editor.name", "photographer.name" ],
+        "abc": "a,b,c"
+      },
+      "es": {
         "query": {
           "bool": {
             "must": {
-              "match": {
-                "headline": {
-                  "query": "${query}",
-                  "operator": "and"
-                }
+              "query_string": {
+                "query": "${query}",
+                "fields": [ "head", "body" ]
               }
             },
-            "must_not": {
-              "term": {
-                "priority": "${priority}"
+            "should": {
+              "query_string": {
+                "query": "byline:${byline}"
               }
-            },
-            "should": [
-              {
-                "match_phrase": {
-                  "headline": "${query}"
-                }
-              },
-              {
-                "match_phrase": {
-                  "title": "${ap}"
-                }
-              }
-            ],
-            "filter": [
-              {
-                "term": {
-                  "type": "${type}"
-                }
-              },
-              {
-                "terms": {
-                  "products": "${products}"
-                }
-              }
-            ]
+            }
           }
         },
-        "sort": [ { "date": "desc" } ],
         "_source": [ "head", "body" ]
       }
     },
     "params": {
-      "query": "Yuri Metelkin",
-      "ap": "AP News",
-      "priority": 1,
-      "type": "text",
-      "products": [
-        1,
-        2,
-        3
-      ]
+      "query": "quick fox",
+      "byline": "ap"
     },
     "output": {
       "query": {
         "bool": {
           "must": {
-            "match": {
-              "headline": {
-                "query": "Yuri Metelkin",
-                "operator": "and"
-              }
-            }
-          },
-          "must_not": {
-            "term": {
-              "priority": 1
-            }
-          },
-          "should": [
-            {
-              "match_phrase": {
-                "headline": "Yuri Metelkin"
-              }
-            },
-            {
-              "match_phrase": {
-                "title": "AP News"
-              }
-            }
-          ],
-          "filter": [
-            {
-              "term": {
-                "type": "text"
-              }
-            },
-            {
-              "terms": {
-                "products": [
-                  1,
-                  2,
-                  3
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "sort": [ { "date": "desc" } ],
-      "_source": [ "head", "body" ]
-    }
-  },
-  {
-    "template": {
-      "id": "7",
-      "name": "7",
-      "index": "test",
-      "source": {
-        "query": {
-          "bool": {
-            "must": {
-              "match": {
-                "headline": {
-                  "query": "${query}",
-                  "operator": "and"
-                }
-              }
-            },
-            "must_not": {
-              "term": {
-                "priority": "${priority}"
-              }
-            },
-            "should": [
-              {
-                "match_phrase": {
-                  "headline": "${query}"
+            "bool": {
+              "must": {
+                "multi_match": {
+                  "query": "quick fox",
+                  "fields": [
+                    "head",
+                    "body"
+                  ]
                 }
               },
-              {
+              "should": {
                 "match_phrase": {
-                  "title": "${ap}"
+                  "title": "quick fox",
+                  "slop": 30
                 }
-              }
-            ],
-            "filter": [
-              {
-                "term": {
-                  "type": "${type}"
-                }
-              },
-              {
-                "terms": {
-                  "products": "${products}"
-                }
-              }
-            ]
-          }
-        },
-        "from": 20,
-        "size": 20,
-        "_source": [ "head", "body" ],
-        "sort": [ { "date": "desc" } ]
-      }
-    },
-    "params": {
-      "query": "Yuri Metelkin"
-    },
-    "output": {
-      "query": {
-        "bool": {
-          "must": {
-            "match": {
-              "headline": {
-                "query": "Yuri Metelkin",
-                "operator": "and"
               }
             }
           },
           "should": {
-            "match_phrase": {
-              "headline": "Yuri Metelkin"
+            "query_string": {
+              "query": "(editor.name:ap OR photographer.name:ap)"
             }
           }
         }
       },
-      "from": 20,
-      "size": 20,
-      "sort": [ { "date": "desc" } ],
-      "_source": [ "head", "body" ]
+      "_source": [
+        "head",
+        "body"
+      ]
     }
   }
 ]

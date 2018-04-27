@@ -1,4 +1,5 @@
-﻿using YM.Json;
+﻿using System.Net;
+using YM.Json;
 
 namespace YM.Elasticsearch.Client.Documents
 {
@@ -9,6 +10,7 @@ namespace YM.Elasticsearch.Client.Documents
         public string Type { get; private set; }
         public int Version { get; private set; }
         public bool IsSuccess { get; private set; }
+        public HttpStatusCode StatusCode { get; private set; }
         public string Result { get; private set; }
         public JsonObject Response { get; private set; }
 
@@ -24,6 +26,8 @@ namespace YM.Elasticsearch.Client.Documents
 
             IsSuccess = response.Http.IsSuccessStatusCode
                 && Result == "deleted";
+
+            StatusCode = response.Http.StatusCode;
 
             Response = jo;
         }

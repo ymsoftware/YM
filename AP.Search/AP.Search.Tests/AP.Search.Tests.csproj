@@ -61,6 +61,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="test_query_transform.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="test_templates.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

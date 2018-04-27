@@ -32,7 +32,10 @@ namespace AP.Search.Tests
 
             var es = new ElasticsearchClient("http://proteus-prd-uno-esdata.associatedpress.com:9200");
 
-            var request = new SearchRequest("appl-breaking", "doc", JsonObject.Parse(json));
+            var request = new SearchRequest(JsonObject.Parse(json))
+                .SetIndex("appl-breaking")
+                .SetType("doc");
+
             var response = await es.ScrollAsync(new ScrollRequest(request));
             while (!response.IsEmpty && suggestions.Count < 10000)
             {

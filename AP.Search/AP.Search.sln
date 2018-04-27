@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AP.Search", "AP.Search\AP.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AP.Search.Tests", "AP.Search.Tests\AP.Search.Tests.csproj", "{0DDCC4BD-3B69-4CE7-B731-C13F61A9B047}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AP.Search.Web.Nancy", "AP.Search.Web.Nancy\AP.Search.Web.Nancy.csproj", "{9F80AE6D-2184-4095-9731-91C0E0470557}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{0DDCC4BD-3B69-4CE7-B731-C13F61A9B047}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DDCC4BD-3B69-4CE7-B731-C13F61A9B047}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DDCC4BD-3B69-4CE7-B731-C13F61A9B047}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F80AE6D-2184-4095-9731-91C0E0470557}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F80AE6D-2184-4095-9731-91C0E0470557}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F80AE6D-2184-4095-9731-91C0E0470557}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F80AE6D-2184-4095-9731-91C0E0470557}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

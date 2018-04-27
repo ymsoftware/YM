@@ -134,13 +134,6 @@ namespace YM.Elasticsearch.Client
             return new ClusterResponse(JsonObject.Parse(response.Content));
         }
 
-        public async Task<string> SearchAsStringAsync(SearchRequest request)
-        {
-            string url = request.GetUrl(_clusterUrl);
-            var response = await SendAsync(url, HttpMethod.Post, request.GetBody());
-            return response.Content;
-        }
-
         public async Task<SearchResponse> SearchAsync(SearchRequest request)
         {
             string url = request.GetUrl(_clusterUrl);
@@ -148,18 +141,9 @@ namespace YM.Elasticsearch.Client
             return new SearchResponse(response);
         }
 
-        public async Task<string> SearchUriAsStringAsync(string searchUri)
-        {
-            string url = string.Format("{0}{1}{2}", _clusterUrl, searchUri.StartsWith("/") ? "" : "/", searchUri);
-            var response = await SendAsync(url, HttpMethod.Get, null);
-            return response.Content;
-        }
-
         public async Task<SearchResponse> SearchUriAsync(string searchUri)
         {
-            string url = string.Format("{0}{1}{2}", _clusterUrl, searchUri.StartsWith("/") ? "" : "/", searchUri);
-            var response = await SendAsync(url, HttpMethod.Get, null);
-            return new SearchResponse(response);
+            return await SearchAsync(new SearchRequest(searchUri, null));
         }
 
         public async Task<ScrollResponse> ScrollAsync(ScrollRequest request)
@@ -175,6 +159,11 @@ namespace YM.Elasticsearch.Client
             string url = request.GetUrl(_clusterUrl);
             var response = await SendAsync(url, HttpMethod.Post, request.GetBody());
             return new SearchAfterResponse(response);
+        }
+
+        public override string ToString()
+        {
+            return _clusterUrl;
         }
 
         private async Task<RestResponse> SendAsync(string url, HttpMethod method, string body)

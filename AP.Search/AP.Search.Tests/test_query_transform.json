@@ -1,0 +1,138 @@
+﻿[
+  {
+    "input": {
+      "multi_match": {
+        "query": "head:quick body:fox",
+        "fields": [ "head", "body" ],
+        "type": "most_fields",
+        "operator": "and"
+      }
+    },
+    "output": {
+      "query_string": {
+        "query": "head:quick body:fox",
+        "fields": [ "head", "body" ],
+        "default_operator": "and"
+      }
+    }
+  },
+  {
+    "input": {
+      "multi_match": {
+        "query": "+quick -fox",
+        "fields": [ "head", "body" ],
+        "type": "most_fields",
+        "operator": "and"
+      }
+    },
+    "output": {
+      "simple_query_string": {
+        "query": "+quick -fox",
+        "fields": [ "head", "body" ],
+        "default_operator": "and"
+      }
+    }
+  },
+  {
+    "input": {
+      "multi_match": {
+        "query": "quick AND NOT fox",
+        "fields": [ "head", "body" ],
+        "type": "most_fields",
+        "operator": "and"
+      }
+    },
+    "output": {
+      "simple_query_string": {
+        "query": "quick AND NOT fox",
+        "fields": [ "head", "body" ],
+        "default_operator": "and"
+      }
+    }
+  },
+  {
+    "input": {
+      "query_string": {
+        "query": "quick fox",
+        "fields": [ "head", "body" ],
+        "default_operator": "and"
+      }
+    },
+    "output": {
+      "multi_match": {
+        "query": "quick fox",
+        "fields": [ "head", "body" ],
+        "operator": "and"
+      }
+    }
+  },
+  {
+    "input": {
+      "query_string": {
+        "query": "+quick -fox",
+        "fields": [ "head", "body" ],
+        "default_operator": "and"
+      }
+    },
+    "output": {
+      "simple_query_string": {
+        "query": "+quick -fox",
+        "fields": [ "head", "body" ],
+        "default_operator": "and"
+      }
+    }
+  },
+  {
+    "input": {
+      "multi_match": {
+        "query": "byline:quick body:fox",
+        "fields": [ "head", "body" ],
+        "type": "most_fields",
+        "operator": "and"
+      },
+      "field_aliases": "appl"
+    },
+    "output": {
+      "query_string": {
+        "query": "(bylines.by:quick OR editor.name:quick OR photographer.name:quick OR producer.name:quick OR captionwriter.name:quick) body:fox",
+        "fields": [ "head", "body" ],
+        "default_operator": "and"
+      }
+    }
+  },
+  {
+    "input": {
+      "query_string": {
+        "query": "quick fox",
+        "fields": [ "head", "body" ]
+      },
+      "query_expand": "sg"
+    },
+    "output": {
+      "bool": {
+        "must": {
+          "multi_match": {
+            "query": "quick fox",
+            "fields": [ "head", "body" ]
+          }
+        },
+        "should": [
+          {
+            "multi_match": {
+              "query": "quick fox",
+              "fields": [ "head", "body" ],
+              "type": "phrase"
+            }
+          },
+          {
+            "multi_match": {
+              "query": "quick fox",
+              "fields": [ "head", "body" ],
+              "operator": "and"
+            }
+          }
+        ]
+      }
+    }
+  }
+]

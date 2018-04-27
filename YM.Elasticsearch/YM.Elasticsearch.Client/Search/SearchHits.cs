@@ -11,6 +11,11 @@ namespace YM.Elasticsearch.Client.Search
 
         public SearchHits(JsonObject hits)
         {
+            if (hits == null)
+            {
+                return;
+            }
+
             Total = hits.Property<int>("total");
             MaxScore = hits.Property<double>("max_score");
 
